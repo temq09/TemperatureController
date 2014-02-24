@@ -135,39 +135,13 @@ public class MainWindowDesignController implements Initializable {
                 }
             }
         });
+        _sensorDescriptionList = FXCollections.observableArrayList();
         
         _globalController = GlobalController.getInstance();
         
-        Thread thread_ConnectToDataBase = new Thread ( new Runnable() {
-            @Override
-            public void run() {
-               while(!_globalController.connectToDataBase("root", "7581557")) {
-                   try {
-                       Thread.sleep(5000);
-                   } catch (InterruptedException ex) {
-                       Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
-                       System.out.println("Error in connect to database thread");
-                   }
-               }
-               System.out.println("Connection to data base is successeful");
-            }
-        } , "Connect to dataBase thread");
-        thread_ConnectToDataBase.start();
-        while(thread_ConnectToDataBase.isAlive()) {
-            try {
-                thread_ConnectToDataBase.join();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("Error while waiting for connection to database");
-            }
-        }
-        
-        
-        _sensorDescriptionList = FXCollections.observableArrayList();
-        initializeTemperatureList();
-        loadRoomList();
-        loadSensrorDescriptions();
-        
+        this.connectToDataBase();
+        this.initizlizeOneWireAdapter();
+
         Thread thread_getTemperature = new Thread( new Runnable() {
             @Override
             public void run() {
@@ -183,6 +157,42 @@ public class MainWindowDesignController implements Initializable {
             }
         });
         thread_getTemperature.start();
+    }
+    
+    private void connectToDataBase() {
+        Thread thread_ConnectToDataBase = new Thread ( new Runnable() {
+            @Override
+            public void run() {  
+                _globalController.connectToDataBase("root", "7581557");
+                initializeTemperatureList();
+                loadRoomList();
+                loadSensrorDescriptions();
+            }
+        } , "Connect to data base thread");
+        thread_ConnectToDataBase.start();      
+        try {
+            thread_ConnectToDataBase.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error while join the \"connect to database thread\" ");
+        }
+    }
+    
+    private void initizlizeOneWireAdapter() {
+        Thread thread_initializeOneWireSensor = new Thread( new Runnable() {
+
+            @Override
+            public void run() {
+                _globalController.initializeOneWireAdapter();
+            }
+        }, "Initialize 1-wire adapter");
+        thread_initializeOneWireSensor.start();
+        try {
+            thread_initializeOneWireSensor.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error while join the \"Initialize 1-wire adapter thread\" ");
+        }
     }
     
     private void loadRoomList() {

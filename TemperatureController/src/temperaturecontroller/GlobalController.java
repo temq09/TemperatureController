@@ -1,7 +1,11 @@
 package temperaturecontroller;
 
+import com.dalsemi.onewire.OneWireException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GlobalController {
     private static final GlobalController INSTANCE = new GlobalController();
@@ -14,14 +18,45 @@ public class GlobalController {
         return INSTANCE;
     }
     
-    public boolean connectToDataBase(String userName, String password) {
-        dBWorker = new DBWorker(userName, password);
-        boolean connectionState = dBWorker.openConnection();
-        sensorWorker = new SensorWorker();
-        return connectionState;
+    /*
+    @param1 - user name for database
+    @param2 - password
+    */
+    public void connectToDataBase(String userName, String password) {
+        boolean stateB = false;
+        while(!stateB) {
+            dBWorker = new DBWorker(userName, password);
+            try {
+                dBWorker.openConnection();
+                stateB = true;
+            } catch (SQLException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Error when connecting to the database");
+            }
+            
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Error while waiting to connect to database");
+            }
+        }
+        
     }
     
+    public void initializeOneWireAdapter() {
+        try {
+            sensorWorker = new SensorWorker();
+        } catch (OneWireException ex) {
+            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("1-wire adapter not found");
+        }
+    }
     
+    /*
+    @return - list of room type. Top-level list stored id typeOfRoom and name type room
+                                 <id, typeOfRoom>
+    */
     public List<List<String>> getListRoom() {
         return dBWorker.getTypeRoomList();
     }

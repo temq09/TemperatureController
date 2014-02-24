@@ -33,20 +33,9 @@ public class DBWorker {
         _connectiString = "jdbc:mysql://" + SERVER_NAME + "/" + DB_NAME;
     }
     
-    public boolean openConnection() {
-        boolean state = false;
-        
-        try {
-            _connection = DriverManager.getConnection(_connectiString, _userName, _password);
-            System.out.println("Connect to data base is success");
-            state = true;
-        }
-        catch (SQLException e) {
-            System.out.println("Error connecting to database");
-            System.out.println(e.getMessage());
-        }
-        
-        return state;
+    public void openConnection() throws SQLException {
+        _connection = DriverManager.getConnection(_connectiString, _userName, _password);
+        System.out.println("Connect to data base is success");
     }
     
     public List<List<String>> getTypeRoomList() {

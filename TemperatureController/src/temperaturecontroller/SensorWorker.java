@@ -27,16 +27,13 @@ public class SensorWorker {
     
     private DSPortAdapter  adapter;
     
-    public SensorWorker() { 
-        try {
-            adapter = OneWireAccessProvider.getDefaultAdapter();
-            System.out.println(adapter.getAdapterName());
-        } catch (OneWireException ex) {
-            Logger.getLogger(SensorWorker.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("1-wire adapter not connected");
-            System.out.println(ex.getMessage());
-        }
-        
+    public SensorWorker() throws OneWireException { 
+        initializeAdapter();
+    }
+    
+    public void initializeAdapter() throws OneWireException {
+        adapter = OneWireAccessProvider.getDefaultAdapter();
+        System.out.println(adapter.getAdapterName());
     }
     
     /*public SensorWorker getInstance() {
