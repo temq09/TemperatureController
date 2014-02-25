@@ -25,7 +25,14 @@ public class TemperatureController extends Application {
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
+        
     }
+
+    @Override
+    public void stop() throws Exception {
+        System.out.println("Application stop");
+    }
+    
 
     /**
      * The main() method is ignored in correctly deployed JavaFX application.

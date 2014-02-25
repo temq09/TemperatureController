@@ -76,6 +76,9 @@ public class MainWindowDesignController implements Initializable {
     private ObservableList<DataModel> _sensorDescriptionList;
     private ObservableList<DataModel> _currentTemperatureList;
     
+    boolean _connectionToDB = false;
+    boolean _connectionToOneWireAdapter = false;
+    
     
     @FXML
     private ListView<String> lv_listOfRoom;
@@ -134,20 +137,23 @@ public class MainWindowDesignController implements Initializable {
                     System.out.println("errooooooooooooooooor");
                 }
             }
+            
         });
         _sensorDescriptionList = FXCollections.observableArrayList();
+        _currentTemperatureList = FXCollections.observableArrayList();
         
         _globalController = GlobalController.getInstance();
         
         this.connectToDataBase();
         this.initizlizeOneWireAdapter();
 
-        Thread thread_getTemperature = new Thread( new Runnable() {
+        Thread thread_workThread = new Thread( new Runnable() {
             @Override
             public void run() {
                 while(true)
                 {
-                    getAndShowCurrentTemperature();
+                    if(_connectionToOneWireAdapter)
+                        getAndShowCurrentTemperature();
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException ex) {
@@ -156,7 +162,7 @@ public class MainWindowDesignController implements Initializable {
                 }
             }
         });
-        thread_getTemperature.start();
+        thread_workThread.start();
     }
     
     private void connectToDataBase() {
@@ -167,15 +173,10 @@ public class MainWindowDesignController implements Initializable {
                 initializeTemperatureList();
                 loadRoomList();
                 loadSensrorDescriptions();
+                _connectionToDB = true;
             }
         } , "Connect to data base thread");
-        thread_ConnectToDataBase.start();      
-        try {
-            thread_ConnectToDataBase.join();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Error while join the \"connect to database thread\" ");
-        }
+        thread_ConnectToDataBase.start();
     }
     
     private void initizlizeOneWireAdapter() {
@@ -184,15 +185,10 @@ public class MainWindowDesignController implements Initializable {
             @Override
             public void run() {
                 _globalController.initializeOneWireAdapter();
+                _connectionToOneWireAdapter = true;
             }
         }, "Initialize 1-wire adapter");
         thread_initializeOneWireSensor.start();
-        try {
-            thread_initializeOneWireSensor.join();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Error while join the \"Initialize 1-wire adapter thread\" ");
-        }
     }
     
     private void loadRoomList() {
@@ -239,6 +235,8 @@ public class MainWindowDesignController implements Initializable {
         
         //получаем новые значения температур
         _temperatureValue = _globalController.getCurrentTemperature();
+        if(_temperatureValue == null)
+            return;
         Map<String, String> dataForInsertIntoDB = new HashMap<>();
         
         for(int i = 0; i < _currentTemperatureList.size(); i++) {
@@ -261,6 +259,7 @@ public class MainWindowDesignController implements Initializable {
         }
         if(!_temperatureValue.isEmpty()) {
             for(Entry<String, Double> entry: _temperatureValue.entrySet()) {
+                //В этом месте если данные из бд не загружены то будет считаться что таких датчков небыло никогда, хотя на самом деле данные из бд просто не были считанны
                 String descriptionString = _sensorForAllTime.get(entry.getKey());
                 if(descriptionString == null) {
                     descriptionString = "Unknown description";
@@ -275,7 +274,7 @@ public class MainWindowDesignController implements Initializable {
                 dataForInsertIntoDB.put(entry.getValue().toString(), _idSensorFromDB.get(entry.getKey()));
             }
         }
-        insertDataIntoDB(dataForInsertIntoDB);
+        //insertDataIntoDB(dataForInsertIntoDB);
     }
     
     private void insertDataIntoDB(Map<String, String> newValues) {
@@ -285,7 +284,7 @@ public class MainWindowDesignController implements Initializable {
     }
     
     private void initializeTemperatureList() {
-        _currentTemperatureList = FXCollections.observableArrayList();
+        //_currentTemperatureList = FXCollections.observableArrayList();
         col_IdInMainMenu.setCellValueFactory(
                 new PropertyValueFactory<DataModel, String>(ID_SENSOR));
         table_description.setCellValueFactory(
@@ -396,4 +395,5 @@ public class MainWindowDesignController implements Initializable {
             _temperature.set(temperature);
         }
     }
+    
 }

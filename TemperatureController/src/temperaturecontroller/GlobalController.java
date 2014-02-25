@@ -2,6 +2,7 @@ package temperaturecontroller;
 
 import com.dalsemi.onewire.OneWireException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -18,10 +19,10 @@ public class GlobalController {
         return INSTANCE;
     }
     
-    /*
-    @param1 - user name for database
-    @param2 - password
-    */
+    /**
+     * @param userName - user name for database
+     * @param password - password
+     */
     public void connectToDataBase(String userName, String password) {
         boolean stateB = false;
         while(!stateB) {
@@ -41,7 +42,6 @@ public class GlobalController {
                 System.out.println("Error while waiting to connect to database");
             }
         }
-        
     }
     
     public void initializeOneWireAdapter() {
@@ -53,8 +53,8 @@ public class GlobalController {
         }
     }
     
-    /*
-    @return - list of room type. Top-level list stored id typeOfRoom and name type room
+    /**
+     @return - list of room type. Top-level list stored id typeOfRoom and name type room
                                  <id, typeOfRoom>
     */
     public List<List<String>> getListRoom() {
@@ -66,7 +66,15 @@ public class GlobalController {
     }
     
     public Map<String, Double> getCurrentTemperature() {
-        return sensorWorker.getTemperature();
+        Map<String, Double> tmpArray = new HashMap<>();
+        try {
+            tmpArray = sensorWorker.getTemperature();
+        } catch (OneWireException ex) {
+            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error while reading temperature from adapter");
+            tmpArray = null;
+        }
+        return tmpArray;
     }
     
     public boolean updateSensorDescription(String sensorId, String newDescription ) {

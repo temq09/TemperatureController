@@ -44,29 +44,23 @@ public class SensorWorker {
         
     }
     
-    public Map<String, Double> getTemperature() {
+    public Map<String, Double> getTemperature() throws OneWireException {
         Map<String, Double> temperatureContainer = new HashMap<>();
         if(adapter != null)
         {
             boolean next = false;
-            try {
-                adapter.targetFamily(TEMPERATURE_SENSOR_FAMILY);
-                next = adapter.findFirstDevice();
-                while(next) {
-                    OneWireContainer owc = adapter.getDeviceContainer();
-                    System.out.println(owc.getAddressAsString() + "  " + owc.getAlternateNames());
-                    TemperatureContainer tc = null;
-                    tc = (TemperatureContainer) owc;
-                    tc.doTemperatureConvert(tc.readDevice());
-                    System.out.println(tc.getTemperature(tc.readDevice()));
-                    temperatureContainer.put(owc.getAddressAsString(), tc.getTemperature(tc.readDevice()));
-                    next = adapter.findNextDevice();
-                }
-            }
-            catch (OneWireException ex) {
-                System.out.println("Error reading sensors");
-                System.out.println(ex.getMessage());
-            }           
+            adapter.targetFamily(TEMPERATURE_SENSOR_FAMILY);
+            next = adapter.findFirstDevice();
+            while(next) {
+                OneWireContainer owc = adapter.getDeviceContainer();
+                System.out.println(owc.getAddressAsString() + "  " + owc.getAlternateNames());
+                TemperatureContainer tc = null;
+                tc = (TemperatureContainer) owc;
+                tc.doTemperatureConvert(tc.readDevice());
+                System.out.println(tc.getTemperature(tc.readDevice()));
+                temperatureContainer.put(owc.getAddressAsString(), tc.getTemperature(tc.readDevice()));
+                next = adapter.findNextDevice();
+            }          
         }
         return temperatureContainer;
     }
