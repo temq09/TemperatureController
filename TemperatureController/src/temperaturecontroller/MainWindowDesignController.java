@@ -154,11 +154,10 @@ public class MainWindowDesignController implements Initializable {
                 while(true)
                 {
                     temperatureValue.clear();
-                    if(_connectionToOneWireAdapter && _connectionToDB){
-                        temperatureValue = getAndShowCurrentTemperature();
-                        if(!temperatureValue.isEmpty())
-                            insertDataIntoDB(temperatureValue);
-                    }
+                    temperatureValue = getAndShowCurrentTemperature();
+                    if(!temperatureValue.isEmpty())
+                        insertDataIntoDB(temperatureValue);
+                    
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException ex) {
@@ -184,7 +183,6 @@ public class MainWindowDesignController implements Initializable {
                 initializeTemperatureList();
                 loadRoomList();
                 loadSensrorDescriptions();
-                _connectionToDB = true;
             }
         } , "Connect to data base thread");
         thread_ConnectToDataBase.start();
@@ -202,7 +200,6 @@ public class MainWindowDesignController implements Initializable {
                         Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                _connectionToOneWireAdapter = true;
             }
         }, "Initialize 1-wire adapter");
         thread_initializeOneWireSensor.start();
@@ -264,10 +261,9 @@ public class MainWindowDesignController implements Initializable {
                     _currentTemperatureList.get(i).setTemperature(entry.getValue().toString());
                     System.out.println(entry.getValue().toString());
                     _temperatureValue.remove(entry.getKey());
-                    if(_connectionToDB)
-                        dataForInsertIntoDB.put(entry.getValue().toString(), 
-                                _idSensorFromDB.get(entry.getKey()));
-                    
+                    dataForInsertIntoDB.put(entry.getValue().toString(), 
+                            _idSensorFromDB.get(entry.getKey()));
+
                     flagDeleteFromTemperatureList = false;
                     break;
                 }
@@ -288,8 +284,7 @@ public class MainWindowDesignController implements Initializable {
                         //добавляем в таблицу бд со всеми сенсорами новый сенсор
                         _globalController.insertNewSensor(entry.getKey());
                         System.out.println("добавляем");
-                        if(_connectionToDB)
-                            loadSensrorDescriptions();
+                        loadSensrorDescriptions();
                     }
                 }
                 

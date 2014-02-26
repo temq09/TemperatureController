@@ -12,6 +12,8 @@ public class GlobalController {
     private static final GlobalController INSTANCE = new GlobalController();
     private DBWorker dBWorker = null;
     private SensorWorker sensorWorker = null;
+    private boolean conectToDb = false;
+    private boolean connectToAdapter = false;
     
     private GlobalController() { }
     
@@ -28,10 +30,11 @@ public class GlobalController {
         dBWorker = new DBWorker(userName, password);
         try {
             dBWorker.openConnection();
-            stateB = true;
+            conectToDb = true;
         } catch (SQLException ex) {
             Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Error when connecting to the database");
+            conectToDb = false;
         }
         return stateB;
     }
@@ -40,10 +43,11 @@ public class GlobalController {
         boolean state = false;
         try {
             sensorWorker = new SensorWorker();
-            state = true;
+            connectToAdapter = true;
         } catch (OneWireException ex) {
             Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("1-wire adapter not found");
+            connectToAdapter = false;
         }
         return state;
     }
@@ -73,7 +77,15 @@ public class GlobalController {
     }
     
     public boolean updateSensorDescription(String sensorId, String newDescription ) {
-        return dBWorker.updateSensorDescription(sensorId, newDescription);
+        boolean state = false;
+        try {
+            state = dBWorker.updateSensorDescription(sensorId, newDescription);
+        } catch (SQLException ex) {
+            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+            chechDataBaseState();
+            state = false;
+        }
+        return state;
     }
 
     @Override
@@ -81,18 +93,57 @@ public class GlobalController {
         return super.clone(); //To change body of generated methods, choose Tools | Templates.
     }
     public void insertNewSensor(String sensorId) {
-        dBWorker.insertNewSensor(sensorId);
+        if(conectToDb) {
+            try {
+                dBWorker.insertNewSensor(sensorId);
+            } catch (SQLException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                chechDataBaseState();
+            }
+        }
     }
     
     public void insertNewTemperatureValue(Map<String, String> newValues) {
-        dBWorker.insertTemperatureValues(newValues);
+        if(conectToDb) {
+            try {
+                dBWorker.insertTemperatureValues(newValues);
+            } catch (SQLException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                chechDataBaseState();
+            }
+        }
     }
     
     public void insertNewRoomType(String roomType) {
-        dBWorker.insertNewRoomeType(roomType);
+        if(conectToDb) {
+            try {
+                dBWorker.insertNewRoomeType(roomType);
+            } catch (SQLException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                chechDataBaseState();
+            }
+        }
     }
     
     public void deleteRoomType(String roomType) {
-        dBWorker.deleteRoomeType(roomType);
+        if(conectToDb) {
+            try {
+                dBWorker.deleteRoomeType(roomType);
+            } catch (SQLException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                chechDataBaseState();
+            }
+        }
+    }
+    
+    private void chechDataBaseState() {
+        try {
+                if(!dBWorker.getConnectionState()) {
+                    conectToDb = false;
+                    System.out.println("database is not available");
+                }
+            } catch (SQLException ex1) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex1);
+            }
     }
 }

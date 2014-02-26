@@ -77,11 +77,11 @@ public class DBWorker {
         return resultList;        
     }
     
-    public void insertNewSensor(String idSensor) {
+    public void insertNewSensor(String idSensor) throws SQLException {
         updateQuery("insert into sensor_descriptions values (null , '"+ idSensor + "', 'Unknown sensor', null)");
     }
     
-    public void insertTemperatureValues(Map<String, String> newValues) {
+    public void insertTemperatureValues(Map<String, String> newValues) throws SQLException {
         for(Entry<String, String> entry : newValues.entrySet()) {
             updateQuery("insert into sensor_values values(null, now(), " 
                     + Float.parseFloat(entry.getKey()) + ", " 
@@ -89,15 +89,15 @@ public class DBWorker {
         }
     }
     
-    public void insertNewRoomeType(String roomType) {
+    public void insertNewRoomeType(String roomType) throws SQLException {
         updateQuery("insert into type_room values (null, '" + roomType + "')");
     }
     
-    public void deleteRoomeType(String roomType) {
+    public void deleteRoomeType(String roomType) throws SQLException {
         updateQuery("delete from type_room where type_room.room_type = '" + roomType + "'");
     }
     
-    public boolean updateSensorDescription(String sensorId, String newDescription) {
+    public boolean updateSensorDescription(String sensorId, String newDescription) throws SQLException {
         boolean queryIsSuccess = false;
         queryIsSuccess = updateQuery("update sensor_descriptions "
                 + "set description = '" + newDescription 
@@ -105,7 +105,7 @@ public class DBWorker {
         return queryIsSuccess;
     }
     
-    private boolean updateQuery(String query) {
+    private boolean updateQuery(String query) throws SQLException {
         boolean queryIsSuccess = false;
         try(PreparedStatement state = _connection.prepareStatement(query))
         {
@@ -118,8 +118,13 @@ public class DBWorker {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
             queryIsSuccess = false;
+            throw new SQLException();
         }
         return queryIsSuccess;
+    }
+    
+    public boolean getConnectionState() throws SQLException {
+        return _connection.isValid(500);
     }
     
 }
