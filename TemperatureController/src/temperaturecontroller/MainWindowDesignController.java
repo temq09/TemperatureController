@@ -59,7 +59,7 @@ public class MainWindowDesignController implements Initializable {
     
     //хранит список всех сенсоров обнаруженных за все время в формате 
     //<id записи, id сенсора, описание сенсора, тип комнаты >
-    private List<List<String>> _allSensorList;
+    //private List<List<String>> _allSensorList;
     
     //хранит текущие показания температуры для сенсоров доступных в данный момент
     //в фомате <id sensora, значение температуры>
@@ -117,7 +117,7 @@ public class MainWindowDesignController implements Initializable {
         // TODO
         
         _roomList = new ArrayList<>();
-        _allSensorList = new ArrayList<>();
+        //_allSensorList = new ArrayList<>();
         _sensorForAllTime = new HashMap<>();
         _idSensorFromDB = new HashMap<>();
         
@@ -150,10 +150,15 @@ public class MainWindowDesignController implements Initializable {
         Thread thread_workThread = new Thread( new Runnable() {
             @Override
             public void run() {
+                Map<String, String> temperatureValue = new HashMap<>();
                 while(true)
                 {
-                    if(_connectionToOneWireAdapter)
-                        getAndShowCurrentTemperature();
+                    temperatureValue.clear();
+                    if(_connectionToOneWireAdapter && _connectionToDB){
+                        temperatureValue = getAndShowCurrentTemperature();
+                        if(!temperatureValue.isEmpty())
+                            insertDataIntoDB(temperatureValue);
+                    }
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException ex) {
@@ -169,7 +174,13 @@ public class MainWindowDesignController implements Initializable {
         Thread thread_ConnectToDataBase = new Thread ( new Runnable() {
             @Override
             public void run() {  
-                _globalController.connectToDataBase("root", "7581557");
+                while (!_globalController.connectToDataBase("root", "7581557")) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 initializeTemperatureList();
                 loadRoomList();
                 loadSensrorDescriptions();
@@ -184,7 +195,13 @@ public class MainWindowDesignController implements Initializable {
 
             @Override
             public void run() {
-                _globalController.initializeOneWireAdapter();
+                while(!_globalController.initializeOneWireAdapter()) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 _connectionToOneWireAdapter = true;
             }
         }, "Initialize 1-wire adapter");
@@ -207,12 +224,10 @@ public class MainWindowDesignController implements Initializable {
     // за все время работы пограммы. Перед этим объекты содержащие информацию 
     //о сенсорах обнуляются
     private void loadSensrorDescriptions() {
-        _allSensorList.clear();
+        _sensorDescriptionList.removeAll(_sensorDescriptionList);
+        List<List<String>> _allSensorList = _globalController.getAllSensorList();
         _sensorForAllTime.clear();
         _idSensorFromDB.clear();
-        _sensorDescriptionList.removeAll(_sensorDescriptionList);
-        
-        _allSensorList = _globalController.getAllSensorList();
         
         for(List<String> d : _allSensorList) {
             _sensorDescriptionList.add(new DataModel(d.get(0).toString(), 
@@ -231,12 +246,15 @@ public class MainWindowDesignController implements Initializable {
         tv_allSensorTable.setItems(_sensorDescriptionList);
     }
     
-    private void getAndShowCurrentTemperature() {
+    private Map<String, String> getAndShowCurrentTemperature() {
         
         //получаем новые значения температур
         _temperatureValue = _globalController.getCurrentTemperature();
-        if(_temperatureValue == null)
-            return;
+        if(_temperatureValue == null) {
+            System.out.println("No adapter or sensor. Return");
+            return null;
+        }
+            
         Map<String, String> dataForInsertIntoDB = new HashMap<>();
         
         for(int i = 0; i < _currentTemperatureList.size(); i++) {
@@ -246,7 +264,10 @@ public class MainWindowDesignController implements Initializable {
                     _currentTemperatureList.get(i).setTemperature(entry.getValue().toString());
                     System.out.println(entry.getValue().toString());
                     _temperatureValue.remove(entry.getKey());
-                    dataForInsertIntoDB.put(entry.getValue().toString(), _idSensorFromDB.get(entry.getKey()));
+                    if(_connectionToDB)
+                        dataForInsertIntoDB.put(entry.getValue().toString(), 
+                                _idSensorFromDB.get(entry.getKey()));
+                    
                     flagDeleteFromTemperatureList = false;
                     break;
                 }
@@ -260,20 +281,25 @@ public class MainWindowDesignController implements Initializable {
         if(!_temperatureValue.isEmpty()) {
             for(Entry<String, Double> entry: _temperatureValue.entrySet()) {
                 //В этом месте если данные из бд не загружены то будет считаться что таких датчков небыло никогда, хотя на самом деле данные из бд просто не были считанны
-                String descriptionString = _sensorForAllTime.get(entry.getKey());
-                if(descriptionString == null) {
-                    descriptionString = "Unknown description";
-                    //добавляем в таблицу бд со всеми сенсорами новый сенсор
-                    _globalController.insertNewSensor(entry.getKey());
-                    loadSensrorDescriptions();
+                String descriptionString = null;
+                if(!_sensorForAllTime.isEmpty()){
+                    descriptionString = _sensorForAllTime.get(entry.getKey());
+                    if(descriptionString == null) {
+                        //добавляем в таблицу бд со всеми сенсорами новый сенсор
+                        _globalController.insertNewSensor(entry.getKey());
+                        System.out.println("добавляем");
+                        if(_connectionToDB)
+                            loadSensrorDescriptions();
+                    }
                 }
-                System.out.println("добавляем");
+                
                 _currentTemperatureList.add(new DataModel(null, entry.getKey(), 
                             _sensorForAllTime.get(entry.getKey()), null, 
                             entry.getValue().toString()));
                 dataForInsertIntoDB.put(entry.getValue().toString(), _idSensorFromDB.get(entry.getKey()));
             }
         }
+        return dataForInsertIntoDB;
         //insertDataIntoDB(dataForInsertIntoDB);
     }
     

@@ -23,34 +23,29 @@ public class GlobalController {
      * @param userName - user name for database
      * @param password - password
      */
-    public void connectToDataBase(String userName, String password) {
+    public boolean connectToDataBase(String userName, String password) {
         boolean stateB = false;
-        while(!stateB) {
-            dBWorker = new DBWorker(userName, password);
-            try {
-                dBWorker.openConnection();
-                stateB = true;
-            } catch (SQLException ex) {
-                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("Error when connecting to the database");
-            }
-            
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("Error while waiting to connect to database");
-            }
+        dBWorker = new DBWorker(userName, password);
+        try {
+            dBWorker.openConnection();
+            stateB = true;
+        } catch (SQLException ex) {
+            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error when connecting to the database");
         }
+        return stateB;
     }
     
-    public void initializeOneWireAdapter() {
+    public boolean initializeOneWireAdapter() {
+        boolean state = false;
         try {
             sensorWorker = new SensorWorker();
+            state = true;
         } catch (OneWireException ex) {
             Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("1-wire adapter not found");
         }
+        return state;
     }
     
     /**
