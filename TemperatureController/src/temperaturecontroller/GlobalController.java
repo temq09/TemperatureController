@@ -24,9 +24,9 @@ public class GlobalController {
     /**
      * @param userName - user name for database
      * @param password - password
+     * @return - returns the state of the connection
      */
     public boolean connectToDataBase(String userName, String password) {
-        boolean stateB = false;
         dBWorker = new DBWorker(userName, password);
         try {
             dBWorker.openConnection();
@@ -36,11 +36,10 @@ public class GlobalController {
             System.out.println("Error when connecting to the database");
             conectToDb = false;
         }
-        return stateB;
+        return conectToDb;
     }
     
     public boolean initializeOneWireAdapter() {
-        boolean state = false;
         try {
             sensorWorker = new SensorWorker();
             connectToAdapter = true;
@@ -49,41 +48,51 @@ public class GlobalController {
             System.out.println("1-wire adapter not found");
             connectToAdapter = false;
         }
-        return state;
+        return connectToAdapter;
     }
     
     /**
-     @return - list of room type. Top-level list stored id typeOfRoom and name type room
-                                 <id, typeOfRoom>
-    */
+     *@return - list of room type. Top-level list stored id typeOfRoom and name type room
+     *                            <id, typeOfRoom>
+     */
     public List<List<String>> getListRoom() {
-        return dBWorker.getTypeRoomList();
+        if(conectToDb) {
+            return dBWorker.getTypeRoomList();
+        }
+        else return null;
     }
     
     public List<List<String>> getAllSensorList() {
-        return dBWorker.getAllSensorList();
+        if(conectToDb) {
+            return dBWorker.getAllSensorList();
+        }
+        else return null;
     }
     
     public Map<String, Double> getCurrentTemperature() {
         Map<String, Double> tmpArray = new HashMap<>();
-        try {
-            tmpArray = sensorWorker.getTemperature();
-        } catch (OneWireException ex) {
-            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Error while reading temperature from adapter");
-            tmpArray = null;
+        if(connectToAdapter) {
+            try {
+                tmpArray = sensorWorker.getTemperature();
+            } catch (OneWireException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Error while reading temperature from adapter");
+                tmpArray = null;
+            }
         }
         return tmpArray;
     }
     
     public boolean updateSensorDescription(String sensorId, String newDescription ) {
         boolean state = false;
-        try {
-            state = dBWorker.updateSensorDescription(sensorId, newDescription);
-        } catch (SQLException ex) {
-            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
-            chechDataBaseState();
-            state = false;
+        if(conectToDb) {
+            try {
+                state = dBWorker.updateSensorDescription(sensorId, newDescription);
+            } catch (SQLException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                chechDataBaseState();
+                state = false;
+            }
         }
         return state;
     }
@@ -138,12 +147,13 @@ public class GlobalController {
     
     private void chechDataBaseState() {
         try {
-                if(!dBWorker.getConnectionState()) {
-                    conectToDb = false;
-                    System.out.println("database is not available");
-                }
-            } catch (SQLException ex1) {
-                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex1);
+            if(!dBWorker.getConnectionState()) {
+                conectToDb = false;
+                System.out.println("database is not available");
             }
+        } catch (SQLException ex1) {
+            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        System.out.println("database is avialable? - " + conectToDb);   
     }
 }

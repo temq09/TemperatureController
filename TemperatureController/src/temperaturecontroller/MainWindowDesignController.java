@@ -52,6 +52,8 @@ public class MainWindowDesignController implements Initializable {
     public static final String TEMPERATURE = "temperature";
     public static final String ROOM_TYPE = "roomType";
     
+    public static boolean isWork = true;
+    
     private GlobalController _globalController;
     
     //хранит список типов комнат в формате <id, тип комнаты>
@@ -74,11 +76,7 @@ public class MainWindowDesignController implements Initializable {
     private Map<String, String> _idSensorFromDB;
     
     private ObservableList<DataModel> _sensorDescriptionList;
-    private ObservableList<DataModel> _currentTemperatureList;
-    
-    boolean _connectionToDB = false;
-    boolean _connectionToOneWireAdapter = false;
-    
+    private ObservableList<DataModel> _currentTemperatureList;    
     
     @FXML
     private ListView<String> lv_listOfRoom;
@@ -111,6 +109,8 @@ public class MainWindowDesignController implements Initializable {
     
     /**
      * Initializes the controller class.
+     * @param url
+     * @param rb
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -151,13 +151,12 @@ public class MainWindowDesignController implements Initializable {
             @Override
             public void run() {
                 Map<String, String> temperatureValue = new HashMap<>();
-                while(true)
+                while(isWork)
                 {
                     temperatureValue.clear();
                     temperatureValue = getAndShowCurrentTemperature();
                     if(!temperatureValue.isEmpty())
                         insertDataIntoDB(temperatureValue);
-                    
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException ex) {
@@ -173,14 +172,14 @@ public class MainWindowDesignController implements Initializable {
         Thread thread_ConnectToDataBase = new Thread ( new Runnable() {
             @Override
             public void run() {  
-                while (!_globalController.connectToDataBase("root", "7581557")) {
+                while (!_globalController.connectToDataBase("root", "7581557") && isWork) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                initializeTemperatureList();
+                
                 loadRoomList();
                 loadSensrorDescriptions();
             }
@@ -190,16 +189,16 @@ public class MainWindowDesignController implements Initializable {
     
     private void initizlizeOneWireAdapter() {
         Thread thread_initializeOneWireSensor = new Thread( new Runnable() {
-
             @Override
             public void run() {
-                while(!_globalController.initializeOneWireAdapter()) {
+                while(!_globalController.initializeOneWireAdapter() && isWork) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+                initializeTemperatureList();
             }
         }, "Initialize 1-wire adapter");
         thread_initializeOneWireSensor.start();
@@ -291,11 +290,11 @@ public class MainWindowDesignController implements Initializable {
                 _currentTemperatureList.add(new DataModel(null, entry.getKey(), 
                             _sensorForAllTime.get(entry.getKey()), null, 
                             entry.getValue().toString()));
-                dataForInsertIntoDB.put(entry.getValue().toString(), _idSensorFromDB.get(entry.getKey()));
+                if(_idSensorFromDB.get(entry.getKey())!= null)
+                    dataForInsertIntoDB.put(entry.getValue().toString(), _idSensorFromDB.get(entry.getKey()));
             }
         }
         return dataForInsertIntoDB;
-        //insertDataIntoDB(dataForInsertIntoDB);
     }
     
     private void insertDataIntoDB(Map<String, String> newValues) {
@@ -363,6 +362,10 @@ public class MainWindowDesignController implements Initializable {
     
     public void editDescriptionSensor(){
         
+    }
+    
+    public static void destroyApplication() throws InterruptedException {
+        isWork = false;
     }
     
     public static class DataModel {

@@ -31,6 +31,7 @@ public class TemperatureController extends Application {
     @Override
     public void stop() throws Exception {
         System.out.println("Application stop");
+        MainWindowDesignController.destroyApplication();
     }
     
 
