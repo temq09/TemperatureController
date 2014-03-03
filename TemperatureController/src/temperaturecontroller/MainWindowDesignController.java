@@ -216,9 +216,10 @@ public class MainWindowDesignController implements Initializable {
         lv_listOfRoom.setItems(data);
     }
     
-    //в этом методе из базы данных вытягиваются датчики, которые были обнаружены
-    // за все время работы пограммы. Перед этим объекты содержащие информацию 
-    //о сенсорах обнуляются
+    /**в этом методе из базы данных вытягиваются датчики, которые были обнаружены
+     * за все время работы пограммы. Перед этим объекты содержащие информацию 
+     * о сенсорах обнуляются
+     */
     private void loadSensrorDescriptions() {
         _sensorDescriptionList.removeAll(_sensorDescriptionList);
         List<List<String>> _allSensorList = _globalController.getAllSensorList();
@@ -244,10 +245,10 @@ public class MainWindowDesignController implements Initializable {
     
     private Map<String, String> getAndShowCurrentTemperature() {
         
-        //получаем новые значения температур
+        /* получаем новые значения температур */
         _temperatureValue = _globalController.getCurrentTemperature();
         if(_temperatureValue == null) {
-            System.out.println("No adapter or sensor. Return");
+            System.out.println("No adapter or sensor.");
             return null;
         }
             
@@ -256,13 +257,23 @@ public class MainWindowDesignController implements Initializable {
         for(int i = 0; i < _currentTemperatureList.size(); i++) {
             boolean flagDeleteFromTemperatureList = true;
             for(Entry<String, Double> entry: _temperatureValue.entrySet()) {
-                if(entry.getKey().equals(_currentTemperatureList.get(i).getIdSensor())) {
-                    _currentTemperatureList.get(i).setTemperature(entry.getValue().toString());
-                    System.out.println(entry.getValue().toString());
-                    _temperatureValue.remove(entry.getKey());
+                /**
+                 * проверяем был ли обнаружен датчик раньше,
+                 * если нет, то добавляем информацию о нем в бд.
+                 */
+                checkSensorList(entry.getKey());
+                
+                /**
+                 * проверяем текущее значение idSensor из _temperatureValue 
+                 * со значением _currentTemperatureList[i]. 
+                 * Если они равны то возвращается true
+                 */
+                if(equalsValues(entry.getKey(),
+                        _currentTemperatureList.get(i).getIdSensor(), 
+                        entry.getValue().toString(), i)) {
+                    
                     dataForInsertIntoDB.put(entry.getValue().toString(), 
                             _idSensorFromDB.get(entry.getKey()));
-
                     flagDeleteFromTemperatureList = false;
                     break;
                 }
@@ -275,18 +286,6 @@ public class MainWindowDesignController implements Initializable {
         }
         if(!_temperatureValue.isEmpty()) {
             for(Entry<String, Double> entry: _temperatureValue.entrySet()) {
-                //В этом месте если данные из бд не загружены то будет считаться что таких датчков небыло никогда, хотя на самом деле данные из бд просто не были считанны
-                String descriptionString = null;
-                if(!_sensorForAllTime.isEmpty()){
-                    descriptionString = _sensorForAllTime.get(entry.getKey());
-                    if(descriptionString == null) {
-                        //добавляем в таблицу бд со всеми сенсорами новый сенсор
-                        _globalController.insertNewSensor(entry.getKey());
-                        System.out.println("добавляем");
-                        loadSensrorDescriptions();
-                    }
-                }
-                
                 _currentTemperatureList.add(new DataModel(null, entry.getKey(), 
                             _sensorForAllTime.get(entry.getKey()), null, 
                             entry.getValue().toString()));
@@ -295,6 +294,51 @@ public class MainWindowDesignController implements Initializable {
             }
         }
         return dataForInsertIntoDB;
+    }
+    
+    /**
+     * Сравнивает текущий id сенсора с i-тым id sensora из отображаемых на форме.
+     * Если они равны то значение температуры обновляется и происходит удаление 
+     * из контейнера, содержащего новые значения температур, текущего значения температуры
+     * @param idSensorFromTempValues - ид сенсора с новым значением температуры
+     * @param idSensorFromCurrentTemperatureList - ид сенсора отображенного на форме
+     * @param newTemperatureValue - новое значение температуры
+     * @param index - индекс сенсора отображенного на форме
+     * @return 
+     */
+    private boolean equalsValues(String idSensorFromTempValues, 
+            String idSensorFromCurrentTemperatureList,
+            String newTemperatureValue,
+            int index) {
+        boolean state = false;
+        if(idSensorFromTempValues.equals(idSensorFromCurrentTemperatureList)) {
+            _currentTemperatureList.get(index).setTemperature(newTemperatureValue);
+            System.out.println(newTemperatureValue);
+            _temperatureValue.remove(idSensorFromCurrentTemperatureList);
+            state = true;
+        }
+        return state;
+    }
+    
+    /**
+     * Проверяет был ли когода либо обнаружен датчик с таким id
+     * @param idSensor - ид обнаруженного сенсора, который необходимо проверить.
+     */
+    private void checkSensorList(String idSensor) {
+        String descriptionString = null;
+        /**В этом месте если данные из бд не загружены 
+         * то будет считаться что таких датчков небыло никогда, 
+         * хотя на самом деле данные из бд просто не были считанны
+         */
+        if(_globalController.getConnectDbState()){
+            descriptionString = _sensorForAllTime.get(idSensor);
+            if(descriptionString == null) {
+                //добавляем в таблицу бд со всеми сенсорами новый сенсор
+                _globalController.insertNewSensor(idSensor);
+                System.out.println("добавляем");
+                loadSensrorDescriptions();
+            }
+        }
     }
     
     private void insertDataIntoDB(Map<String, String> newValues) {

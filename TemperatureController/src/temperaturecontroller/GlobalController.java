@@ -156,4 +156,12 @@ public class GlobalController {
         }
         System.out.println("database is avialable? - " + conectToDb);   
     }
+    
+    public boolean getConnectDbState() {
+        return conectToDb;
+    }
+    
+    public boolean getConnectToAdapterState() {
+        return connectToAdapter;
+    }
 }
