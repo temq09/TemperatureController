@@ -161,7 +161,7 @@ public class MainWindowDesignController implements Initializable {
                 {
                     temperatureValue.clear();
                     temperatureValue = getAndShowCurrentTemperature();
-                    if(!temperatureValue.isEmpty())
+                    if(temperatureValue!=null && !temperatureValue.isEmpty())
                         insertDataIntoDB(temperatureValue);
                     try {
                         Thread.sleep(2000);
