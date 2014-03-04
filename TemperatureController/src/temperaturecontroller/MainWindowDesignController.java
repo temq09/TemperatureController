@@ -129,12 +129,18 @@ public class MainWindowDesignController implements Initializable {
                 //t.getTableView().getItems().get(t.getTablePosition().getRow()).setDescription(t.getNewValue());
                 String sensorId = t.getTableView().getItems().get(t.getTablePosition().getRow()).getIdSensor().toString();
                 String oldDescription = t.getTableView().getItems().get(t.getTablePosition().getRow()).getDescriptions();
+                String oldValue = t.getOldValue();
+                System.out.println(oldValue);
+                System.out.println(oldDescription);
                 if(_globalController.updateSensorDescription(sensorId, t.getNewValue())) {
                     loadSensrorDescriptions();
                     initializeTemperatureList();
                 }
                 else {
-                    System.out.println("errooooooooooooooooor");
+                    System.out.println("Ошибка при обновлении описания датчика");
+                    t.getRowValue().setDescription(oldDescription);
+                    tv_allSensorTable.getColumns().get(0).setVisible(false);
+                    tv_allSensorTable.getColumns().get(0).setVisible(true);
                 }
             }
             
@@ -164,7 +170,7 @@ public class MainWindowDesignController implements Initializable {
                     }
                 }
             }
-        });
+        }, "work thread");
         thread_workThread.start();
     }
     
@@ -181,6 +187,7 @@ public class MainWindowDesignController implements Initializable {
                 }
                 
                 loadRoomList();
+                initializeDescriptionList();
                 loadSensrorDescriptions();
             }
         } , "Connect to data base thread");
@@ -199,6 +206,7 @@ public class MainWindowDesignController implements Initializable {
                     }
                 }
                 initializeTemperatureList();
+                
             }
         }, "Initialize 1-wire adapter");
         thread_initializeOneWireSensor.start();
@@ -234,12 +242,7 @@ public class MainWindowDesignController implements Initializable {
             _sensorForAllTime.put(d.get(1).toString(), d.get(2).toString());
             _idSensorFromDB.put(d.get(1), d.get(0));
         }
-        col_idSendor.setCellValueFactory(
-                new PropertyValueFactory<DataModel, String>(ID_SENSOR));
-        col_sensorDescription.setCellValueFactory(
-                new PropertyValueFactory<DataModel, String>(DESCRIPTIONS));
-        col_roomType.setCellValueFactory(
-                new PropertyValueFactory<DataModel, String>(ROOM_TYPE));
+        
         tv_allSensorTable.setItems(_sensorDescriptionList);
     }
     
@@ -253,71 +256,22 @@ public class MainWindowDesignController implements Initializable {
         }
             
         Map<String, String> dataForInsertIntoDB = new HashMap<>();
-        
-        for(int i = 0; i < _currentTemperatureList.size(); i++) {
-            boolean flagDeleteFromTemperatureList = true;
-            for(Entry<String, Double> entry: _temperatureValue.entrySet()) {
-                /**
-                 * проверяем был ли обнаружен датчик раньше,
-                 * если нет, то добавляем информацию о нем в бд.
-                 */
-                checkSensorList(entry.getKey());
-                
-                /**
-                 * проверяем текущее значение idSensor из _temperatureValue 
-                 * со значением _currentTemperatureList[i]. 
-                 * Если они равны то возвращается true
-                 */
-                if(equalsValues(entry.getKey(),
-                        _currentTemperatureList.get(i).getIdSensor(), 
-                        entry.getValue().toString(), i)) {
-                    
-                    dataForInsertIntoDB.put(entry.getValue().toString(), 
-                            _idSensorFromDB.get(entry.getKey()));
-                    flagDeleteFromTemperatureList = false;
-                    break;
-                }
-            }
-            if(flagDeleteFromTemperatureList)
-            {
-                System.out.println("delete");
-                _currentTemperatureList.remove(i);
-            }
-        }
-        if(!_temperatureValue.isEmpty()) {
-            for(Entry<String, Double> entry: _temperatureValue.entrySet()) {
-                _currentTemperatureList.add(new DataModel(null, entry.getKey(), 
-                            _sensorForAllTime.get(entry.getKey()), null, 
-                            entry.getValue().toString()));
-                if(_idSensorFromDB.get(entry.getKey())!= null)
-                    dataForInsertIntoDB.put(entry.getValue().toString(), _idSensorFromDB.get(entry.getKey()));
-            }
+        _currentTemperatureList.removeAll(_currentTemperatureList);
+        for(Entry<String, Double> entry: _temperatureValue.entrySet()) {
+            checkSensorList(entry.getKey());
+            _currentTemperatureList.add(
+                    new DataModel(
+                            null, 
+                            entry.getKey(), 
+                            _sensorForAllTime.get(entry.getKey()), 
+                            null, 
+                            entry.getValue().toString()
+                    )
+            );
+            dataForInsertIntoDB.put(entry.getValue().toString(),
+                    _idSensorFromDB.get(entry.getKey()));
         }
         return dataForInsertIntoDB;
-    }
-    
-    /**
-     * Сравнивает текущий id сенсора с i-тым id sensora из отображаемых на форме.
-     * Если они равны то значение температуры обновляется и происходит удаление 
-     * из контейнера, содержащего новые значения температур, текущего значения температуры
-     * @param idSensorFromTempValues - ид сенсора с новым значением температуры
-     * @param idSensorFromCurrentTemperatureList - ид сенсора отображенного на форме
-     * @param newTemperatureValue - новое значение температуры
-     * @param index - индекс сенсора отображенного на форме
-     * @return 
-     */
-    private boolean equalsValues(String idSensorFromTempValues, 
-            String idSensorFromCurrentTemperatureList,
-            String newTemperatureValue,
-            int index) {
-        boolean state = false;
-        if(idSensorFromTempValues.equals(idSensorFromCurrentTemperatureList)) {
-            _currentTemperatureList.get(index).setTemperature(newTemperatureValue);
-            System.out.println(newTemperatureValue);
-            _temperatureValue.remove(idSensorFromCurrentTemperatureList);
-            state = true;
-        }
-        return state;
     }
     
     /**
@@ -356,6 +310,15 @@ public class MainWindowDesignController implements Initializable {
         col_currentTemperature.setCellValueFactory(
                 new PropertyValueFactory<DataModel, String>(TEMPERATURE));
         tv_temperatureTable.setItems(_currentTemperatureList);
+    }
+    
+    private void initializeDescriptionList() {
+        col_idSendor.setCellValueFactory(
+                new PropertyValueFactory<DataModel, String>(ID_SENSOR));
+        col_sensorDescription.setCellValueFactory(
+                new PropertyValueFactory<DataModel, String>(DESCRIPTIONS));
+        col_roomType.setCellValueFactory(
+                new PropertyValueFactory<DataModel, String>(ROOM_TYPE));
     }
     
     public void addNewRoomType() {
