@@ -112,15 +112,18 @@ public class GlobalController {
         }
     }
     
-    public void insertNewTemperatureValue(Map<String, String> newValues) {
+    public boolean insertNewTemperatureValue(Map<String, String> newValues) {
+        boolean state = false;
         if(conectToDb) {
             try {
                 dBWorker.insertTemperatureValues(newValues);
+                state = true;
             } catch (SQLException ex) {
                 Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
                 chechDataBaseState();
             }
         }
+        return state;
     }
     
     public void insertNewRoomType(String roomType) {

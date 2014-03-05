@@ -304,7 +304,15 @@ public class MainWindowDesignController implements Initializable {
     
     private void insertDataIntoDB(Map<String, String> newValues) {
         if(!newValues.isEmpty()) {
-            _globalController.insertNewTemperatureValue(newValues);
+            /* если операция добавления возвращает false значит что-то пошле не так */
+            if (!_globalController.insertNewTemperatureValue(newValues)) {
+                /* если проверка соединения с дб возвращает false, 
+                 * то отсутствует соединение с бд, поэтому надо переподключится
+                 */
+                if(!_globalController.getConnectDbState()) {
+                    connectToDataBase();
+                }
+            }
         }
     }
     
