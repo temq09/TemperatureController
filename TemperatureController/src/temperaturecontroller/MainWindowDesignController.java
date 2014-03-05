@@ -57,7 +57,7 @@ public class MainWindowDesignController implements Initializable {
     private GlobalController _globalController;
     
     //хранит список типов комнат в формате <id, тип комнаты>
-    private List<List<String>> _roomList;
+    private Map<String, String> _roomList;
     
     //хранит список всех сенсоров обнаруженных за все время в формате 
     //<id записи, id сенсора, описание сенсора, тип комнаты >
@@ -76,7 +76,8 @@ public class MainWindowDesignController implements Initializable {
     private Map<String, String> _idSensorFromDB;
     
     private ObservableList<DataModel> _sensorDescriptionList;
-    private ObservableList<DataModel> _currentTemperatureList;    
+    private ObservableList<DataModel> _currentTemperatureList;
+    private ObservableList<String> _roomType;
     
     @FXML
     private ListView<String> lv_listOfRoom;
@@ -116,7 +117,7 @@ public class MainWindowDesignController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
         
-        _roomList = new ArrayList<>();
+        _roomList = new HashMap<>();
         //_allSensorList = new ArrayList<>();
         _sensorForAllTime = new HashMap<>();
         _idSensorFromDB = new HashMap<>();
@@ -147,6 +148,7 @@ public class MainWindowDesignController implements Initializable {
         });
         _sensorDescriptionList = FXCollections.observableArrayList();
         _currentTemperatureList = FXCollections.observableArrayList();
+        _roomType = FXCollections.observableArrayList();
         
         _globalController = GlobalController.getInstance();
         
@@ -213,15 +215,19 @@ public class MainWindowDesignController implements Initializable {
     }
     
     private void loadRoomList() {
-        _roomList = _globalController.getListRoom();
-        ObservableList<String> data = FXCollections.observableArrayList();
-        for(Iterator it = _roomList.iterator(); it.hasNext(); )
+        System.out.println("Загружаем список комнат");
+        lv_listOfRoom.setItems(_roomType);
+        List<List<String>> tmpRoomList = new ArrayList<>();
+        tmpRoomList = _globalController.getListRoom();
+        for(Iterator it = tmpRoomList.iterator(); it.hasNext(); )
         {
             List<String> obj = (List<String>)it.next();
-            System.out.println(obj.get(1));
-            data.add(obj.get(1));
+            System.out.println(obj.get(0) + " " + obj.get(1));
+            /* добавляем в карту значения ид и типа комнаты */
+            _roomList.put(obj.get(0), obj.get(1));
+            /* добавляем в лист для отображения на форме типов комнат */
+            _roomType.add(obj.get(1));
         }
-        lv_listOfRoom.setItems(data);
     }
     
     /**в этом методе из базы данных вытягиваются датчики, которые были обнаружены
@@ -229,6 +235,7 @@ public class MainWindowDesignController implements Initializable {
      * о сенсорах обнуляются
      */
     private void loadSensrorDescriptions() {
+        System.out.println("Загружаем список датчиков");
         _sensorDescriptionList.removeAll(_sensorDescriptionList);
         List<List<String>> _allSensorList = _globalController.getAllSensorList();
         _sensorForAllTime.clear();
@@ -243,7 +250,7 @@ public class MainWindowDesignController implements Initializable {
             _idSensorFromDB.put(d.get(1), d.get(0));
         }
         
-        tv_allSensorTable.setItems(_sensorDescriptionList);
+        //tv_allSensorTable.setItems(_sensorDescriptionList);
     }
     
     private Map<String, String> getAndShowCurrentTemperature() {
@@ -313,12 +320,14 @@ public class MainWindowDesignController implements Initializable {
     }
     
     private void initializeDescriptionList() {
+        System.out.println("Инициализация списка датчиков");
         col_idSendor.setCellValueFactory(
                 new PropertyValueFactory<DataModel, String>(ID_SENSOR));
         col_sensorDescription.setCellValueFactory(
                 new PropertyValueFactory<DataModel, String>(DESCRIPTIONS));
         col_roomType.setCellValueFactory(
                 new PropertyValueFactory<DataModel, String>(ROOM_TYPE));
+        tv_allSensorTable.setItems(_sensorDescriptionList);
     }
     
     public void addNewRoomType() {
