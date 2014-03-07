@@ -19,12 +19,14 @@ import java.util.logging.Logger;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.FocusModel;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -51,6 +53,12 @@ public class MainWindowDesignController implements Initializable {
     public static final String ID = "id";
     public static final String TEMPERATURE = "temperature";
     public static final String ROOM_TYPE = "roomType";
+    
+    private final int THIRTY_SEC = 30_000;
+    private final int FORTY_FIVE_SEC = 45_000;
+    private final int SIXTY_SEC = 60_000;
+    
+    private int _updateTime;
     
     public static boolean isWork = true;
     
@@ -86,9 +94,9 @@ public class MainWindowDesignController implements Initializable {
     @FXML
     private Button btn_deleteTypeRoom;
     @FXML
-    private MenuButton btn_menuAccuracy;
+    private ComboBox<String> btn_menuAccuracy;
     @FXML
-    private MenuButton btn_menuTime;
+    private ComboBox<String> btn_menuTime;
     @FXML
     private TableColumn<DataModel, String> table_description; 
     @FXML
@@ -124,7 +132,7 @@ public class MainWindowDesignController implements Initializable {
         
         col_sensorDescription.setCellFactory(TextFieldTableCell.<DataModel>forTableColumn());
         col_sensorDescription.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<DataModel, String>>() {
-
+            
             @Override
             public void handle(TableColumn.CellEditEvent<DataModel, String> t) {
                 //t.getTableView().getItems().get(t.getTablePosition().getRow()).setDescription(t.getNewValue());
@@ -146,6 +154,29 @@ public class MainWindowDesignController implements Initializable {
             }
             
         });
+      
+        btn_menuTime.getItems().addAll("30", "45", "60");
+        btn_menuTime.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                switch(btn_menuTime.getValue()) 
+                {
+                    case "30": System.out.println("Изменяем врямя обновления температуры на 30 секунд");
+                        _updateTime = THIRTY_SEC;
+                        break;
+                    case "45": System.out.println("Изменяем время обновления температуры на 45 секунд");
+                        _updateTime = FORTY_FIVE_SEC;
+                        break;
+                    case "60": System.out.println("Изменяем время обновления температуры на 60 секунд");
+                        _updateTime = SIXTY_SEC;
+                        break;
+                    default : System.out.println("Неправильный выбор");
+                }
+            }
+            
+        });
+        btn_menuTime.setValue("30");
+        
         _sensorDescriptionList = FXCollections.observableArrayList();
         _currentTemperatureList = FXCollections.observableArrayList();
         _roomType = FXCollections.observableArrayList();
@@ -154,7 +185,7 @@ public class MainWindowDesignController implements Initializable {
         
         this.connectToDataBase();
         this.initizlizeOneWireAdapter();
-
+        
         Thread thread_workThread = new Thread( new Runnable() {
             @Override
             public void run() {
@@ -166,7 +197,7 @@ public class MainWindowDesignController implements Initializable {
                     if(temperatureValue!=null && !temperatureValue.isEmpty())
                         insertDataIntoDB(temperatureValue);
                     try {
-                        Thread.sleep(2000);
+                        Thread.sleep(_updateTime);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -181,6 +212,7 @@ public class MainWindowDesignController implements Initializable {
             @Override
             public void run() {  
                 while (!_globalController.connectToDataBase("root", "7581557") && isWork) {
+                    
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {
@@ -201,6 +233,7 @@ public class MainWindowDesignController implements Initializable {
             @Override
             public void run() {
                 while(!_globalController.initializeOneWireAdapter() && isWork) {
+                    
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {
@@ -330,6 +363,7 @@ public class MainWindowDesignController implements Initializable {
         tv_allSensorTable.setItems(_sensorDescriptionList);
     }
     
+    @FXML
     public void addNewRoomType() {
         final Stage dialog = new Stage();
         dialog.initStyle(StageStyle.DECORATED);
@@ -366,6 +400,7 @@ public class MainWindowDesignController implements Initializable {
         dialog.show();
     }
     
+    @FXML
     public void deleteCurrentRoomType() {
         FocusModel<String> currentItem = lv_listOfRoom.getFocusModel();
         String roomType = currentItem.getFocusedItem();
@@ -376,6 +411,7 @@ public class MainWindowDesignController implements Initializable {
         }  
     }
     
+    @FXML
     public void editDescriptionSensor(){
         
     }
