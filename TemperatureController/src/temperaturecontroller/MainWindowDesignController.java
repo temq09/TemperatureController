@@ -217,8 +217,16 @@ public class MainWindowDesignController implements Initializable {
     private void loadRoomList() {
         System.out.println("Загружаем список комнат");
         lv_listOfRoom.setItems(_roomType);
+        _roomType.removeAll(_roomType);
+        _roomList.clear();
         List<List<String>> tmpRoomList = new ArrayList<>();
         tmpRoomList = _globalController.getListRoom();
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         for(Iterator it = tmpRoomList.iterator(); it.hasNext(); )
         {
             List<String> obj = (List<String>)it.next();
@@ -234,7 +242,7 @@ public class MainWindowDesignController implements Initializable {
      * за все время работы пограммы. Перед этим объекты содержащие информацию 
      * о сенсорах обнуляются
      */
-    private void loadSensrorDescriptions() {
+    private void  loadSensrorDescriptions() {
         System.out.println("Загружаем список датчиков");
         _sensorDescriptionList.removeAll(_sensorDescriptionList);
         List<List<String>> _allSensorList = _globalController.getAllSensorList();
@@ -249,8 +257,6 @@ public class MainWindowDesignController implements Initializable {
             _sensorForAllTime.put(d.get(1).toString(), d.get(2).toString());
             _idSensorFromDB.put(d.get(1), d.get(0));
         }
-        
-        //tv_allSensorTable.setItems(_sensorDescriptionList);
     }
     
     private Map<String, String> getAndShowCurrentTemperature() {
@@ -310,7 +316,7 @@ public class MainWindowDesignController implements Initializable {
                  * то отсутствует соединение с бд, поэтому надо переподключится
                  */
                 if(!_globalController.getConnectDbState()) {
-                    connectToDataBase();
+                    
                 }
             }
         }
