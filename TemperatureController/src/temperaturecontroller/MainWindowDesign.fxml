@@ -62,7 +62,7 @@
     <TableColumn fx:id="col_idSendor" prefWidth="75.0" text="id датчика" />
     <TableColumn fx:id="col_sensorDescription" onEditCancel="#editDescriptionSensor" prefWidth="75.0" text="расшифровка" /><TableColumn fx:id="col_roomType" prefWidth="75.0" text="тип комнаты" />
   </columns>
-</TableView><Button layoutX="223.1875" layoutY="458.0" mnemonicParsing="false" prefWidth="80.0" text="Задать тип" AnchorPane.bottomAnchor="13.0" AnchorPane.rightAnchor="18.0" />
+</TableView><Button fx:id="btn_setRoomType" layoutX="223.1875" layoutY="458.0" mnemonicParsing="false" prefWidth="80.0" text="Задать тип" AnchorPane.bottomAnchor="13.0" AnchorPane.rightAnchor="18.0" />
 </children></AnchorPane>
       </content>
     </Tab>

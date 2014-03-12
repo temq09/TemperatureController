@@ -27,20 +27,26 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.FocusModel;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.ComboBoxListCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Callback;
 
 /**
  * FXML Controller class
@@ -60,7 +66,7 @@ public class MainWindowDesignController implements Initializable {
     
     private int _updateTime;
     
-    public static boolean isWork = true;
+    private static boolean isWork = true;
     
     private GlobalController _globalController;
     
@@ -115,6 +121,8 @@ public class MainWindowDesignController implements Initializable {
     private TableView<DataModel> tv_temperatureTable;
     @FXML
     private VBox mainWindow;
+    @FXML
+    private Button btn_setRoomType;
     
     /**
      * Initializes the controller class.
@@ -176,6 +184,19 @@ public class MainWindowDesignController implements Initializable {
             
         });
         btn_menuTime.setValue("30");
+        
+        btn_setRoomType.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent t) {
+                if(tv_allSensorTable.getSelectionModel().getSelectedItem() != null) {
+                    System.out.println(tv_allSensorTable.getSelectionModel().getSelectedItem().getId());
+                    setRoomTypeForSendor(tv_allSensorTable.getSelectionModel().getSelectedItem().getId(), 
+                            tv_allSensorTable.getSelectionModel().getSelectedItem().getIdSensor(),
+                            tv_allSensorTable.getSelectionModel().getSelectedItem().getRoomType());
+                }
+            }
+        });
         
         _sensorDescriptionList = FXCollections.observableArrayList();
         _currentTemperatureList = FXCollections.observableArrayList();
@@ -252,9 +273,9 @@ public class MainWindowDesignController implements Initializable {
         lv_listOfRoom.setItems(_roomType);
         List<List<String>> tmpRoomList = new ArrayList<>();
         tmpRoomList = _globalController.getListRoom();
-        for(Iterator it = tmpRoomList.iterator(); it.hasNext(); )
+        for(Iterator<List<String>> it = tmpRoomList.iterator(); it.hasNext(); )
         {
-            List<String> obj = (List<String>)it.next();
+            List<String> obj = it.next();
             System.out.println(obj.get(0) + " " + obj.get(1));
             /* добавляем в карту значения ид и типа комнаты */
             _roomList.put(obj.get(0), obj.get(1));
@@ -418,6 +439,53 @@ public class MainWindowDesignController implements Initializable {
     
     public static void destroyApplication() throws InterruptedException {
         isWork = false;
+    }
+    
+    public void setRoomTypeForSendor(String id, String idSensor, String oldRoomType) {
+        final Stage dialog = new Stage();
+        dialog.initStyle(StageStyle.DECORATED);
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        
+        VBox descriptionLabelLayout = new VBox();
+        Label lb_idSensorLabel = new Label("Ид сенсора");
+        Label lb_idSendor = new Label(idSensor);
+        descriptionLabelLayout.getChildren().addAll(lb_idSensorLabel, lb_idSendor);
+        descriptionLabelLayout.setSpacing(5);
+        
+        VBox roomTypeLayout = new VBox();
+        Label lb_roomType = new Label("Тип комнаты");
+        ComboBox<String> cb_roomTypeBox = new ComboBox<>();
+        cb_roomTypeBox.setItems(_roomType);
+        
+        roomTypeLayout.getChildren().addAll(lb_roomType, cb_roomTypeBox);
+        roomTypeLayout.setSpacing(5);
+        
+        HBox descriptionAndRoomTypeLayout = new HBox();
+        descriptionAndRoomTypeLayout.getChildren().addAll(descriptionLabelLayout, roomTypeLayout);
+        descriptionAndRoomTypeLayout.setSpacing(10);
+        
+        HBox okCanselLayout = new HBox();
+        Button btn_Ok = new Button("Готово");
+        Button btn_cansel = new Button("Отмена");
+        btn_cansel.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent t) {
+                dialog.close();
+            }
+        });
+        okCanselLayout.getChildren().addAll(btn_Ok, btn_cansel);
+        okCanselLayout.setSpacing(10);
+        okCanselLayout.setAlignment(Pos.BOTTOM_RIGHT);
+        
+        VBox mainLayout = new VBox();
+        mainLayout.getChildren().addAll(descriptionAndRoomTypeLayout, okCanselLayout);
+        mainLayout.setSpacing(10);
+        mainLayout.setAlignment(Pos.CENTER);
+        
+        Scene scene = new Scene(mainLayout);
+        dialog.setScene(scene);
+        dialog.show();
     }
     
     public static class DataModel {
