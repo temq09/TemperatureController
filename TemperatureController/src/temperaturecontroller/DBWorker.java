@@ -117,6 +117,25 @@ public class DBWorker {
         return queryIsSuccess;
     }
     
+    public void deleteSensorFromDB(String idSensor) throws SQLException {
+        _connection.setAutoCommit(false);
+        try {
+            updateQuery("delete from sensor_values where id_sensor = " + idSensor);
+            updateQuery("delete from sensor_descriptions where id = " + idSensor);
+            _connection.commit();
+        }
+        catch(SQLException exception) {
+            _connection.rollback();
+            System.out.println("When you remove the temperature from "
+                    + "the database error occurred. /n" 
+                    + exception.getMessage());
+            throw new SQLException("delete sensor failed: " + exception.getMessage());
+        }
+        finally {
+            _connection.setAutoCommit(true);
+        }
+    }
+    
     private boolean updateQuery(String query) throws SQLException {
         boolean queryIsSuccess = false;
         try(PreparedStatement state = _connection.prepareStatement(query))

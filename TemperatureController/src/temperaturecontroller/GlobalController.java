@@ -155,6 +155,15 @@ public class GlobalController {
         
     }
     
+    public void deleteSensorFromDB(String idSensor){
+        try {
+            dBWorker.deleteSensorFromDB(idSensor);
+        } catch (SQLException ex) {
+            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+            chechDataBaseState();
+        }
+    }
+    
     private void chechDataBaseState() {
         try {
             if(!dBWorker.getConnectionState()) {

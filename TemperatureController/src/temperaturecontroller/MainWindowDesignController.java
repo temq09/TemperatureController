@@ -27,17 +27,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.FocusModel;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.ComboBoxListCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseEvent;
@@ -46,7 +41,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.Callback;
 
 /**
  * FXML Controller class
@@ -123,6 +117,8 @@ public class MainWindowDesignController implements Initializable {
     private VBox mainWindow;
     @FXML
     private Button btn_setRoomType;
+    @FXML
+    private Button btn_deleteSensor;
     
     /**
      * Initializes the controller class.
@@ -194,6 +190,16 @@ public class MainWindowDesignController implements Initializable {
                     setRoomTypeForSendor(tv_allSensorTable.getSelectionModel().getSelectedItem().getId(), 
                             tv_allSensorTable.getSelectionModel().getSelectedItem().getIdSensor(),
                             tv_allSensorTable.getSelectionModel().getSelectedItem().getRoomType());
+                }
+            }
+        });
+        
+        btn_deleteSensor.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent t) {
+                if(tv_allSensorTable.getSelectionModel().getSelectedItem() != null) {
+                    deleteSensorFromDB(tv_allSensorTable.getSelectionModel().getSelectedItem().getId());
                 }
             }
         });
@@ -499,6 +505,50 @@ public class MainWindowDesignController implements Initializable {
         mainLayout.getChildren().addAll(descriptionAndRoomTypeLayout, okCanselLayout);
         mainLayout.setSpacing(10);
         mainLayout.setAlignment(Pos.CENTER);
+        
+        Scene scene = new Scene(mainLayout);
+        dialog.setScene(scene);
+        dialog.setResizable(false);
+        dialog.show();
+    }
+    
+    public void deleteSensorFromDB(final String idSensor) {
+        final Stage dialog = new Stage();
+        dialog.initStyle(StageStyle.DECORATED);
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        
+        Button btn_Ok = new Button("Дa");
+        btn_Ok.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent t) {
+                System.out.println("Удаляем датчик с из бд ");
+                _globalController.deleteSensorFromDB(idSensor);
+                loadSensrorDescriptions();
+                dialog.close();                
+            }
+        });
+        
+        Button btn_Cansel = new Button("Нет");
+        btn_Cansel.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent t) {
+                dialog.close();
+            }
+        });
+        
+        HBox btnLayout = new HBox();
+        btnLayout.setSpacing(10);
+        btnLayout.getChildren().addAll(btn_Ok, btn_Cansel);
+        
+        Label notifyLabel = new Label("При удалении датчика будет удалена информация о температуре с этого датчика. Продолжить?");
+        notifyLabel.setAlignment(Pos.CENTER);
+        
+        VBox mainLayout = new VBox();
+        mainLayout.setSpacing(10);
+        mainLayout.setAlignment(Pos.BOTTOM_LEFT);
+        mainLayout.getChildren().addAll(notifyLabel, btnLayout);
         
         Scene scene = new Scene(mainLayout);
         dialog.setScene(scene);

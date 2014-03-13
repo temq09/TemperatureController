@@ -8,6 +8,18 @@
 <VBox fx:id="mainWindow" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="525.0" prefWidth="704.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="temperaturecontroller.MainWindowDesignController">
 <children><TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" xmlns:fx="http://javafx.com/fxml">
   <tabs>
+    <Tab text="Настройки">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+<children><ListView fx:id="lv_listOfRoom" editable="true" layoutX="14.0" layoutY="14.0" prefHeight="410.0" prefWidth="200.0" AnchorPane.bottomAnchor="49.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="38.0" /><Button fx:id="btn_addTypeRoom" layoutX="14.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#addNewRoomType" prefHeight="22.0" prefWidth="80.0" text="Добавить" AnchorPane.bottomAnchor="17.0" AnchorPane.leftAnchor="14.0" /><Button fx:id="btn_deleteTypeRoom" layoutX="130.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#deleteCurrentRoomType" prefHeight="22.0" prefWidth="80.0" text="Удалить" AnchorPane.bottomAnchor="17.0" AnchorPane.leftAnchor="130.0" /><Label layoutX="14.0" layoutY="14.0" prefHeight="17.0" prefWidth="127.0" text="Типы комнат" /><TableView fx:id="tv_allSensorTable" editable="true" layoutX="223.0" layoutY="38.0" prefHeight="410.0" prefWidth="463.0" AnchorPane.bottomAnchor="49.0" AnchorPane.leftAnchor="223.0" AnchorPane.rightAnchor="18.0" AnchorPane.topAnchor="38.0" xmlns:fx="http://javafx.com/fxml">
+  <columns>
+    <TableColumn fx:id="col_idSendor" prefWidth="75.0" text="id датчика" />
+    <TableColumn fx:id="col_sensorDescription" onEditCancel="#editDescriptionSensor" prefWidth="75.0" text="расшифровка" /><TableColumn fx:id="col_roomType" prefWidth="75.0" text="тип комнаты" />
+  </columns>
+</TableView><Button fx:id="btn_setRoomType" layoutX="223.1875" layoutY="458.0" mnemonicParsing="false" prefWidth="80.0" text="Задать тип" AnchorPane.bottomAnchor="13.0" AnchorPane.rightAnchor="18.0" /><Button fx:id="btn_deleteSensor" layoutX="475.0" layoutY="458.0" mnemonicParsing="false" text="Удалить датчик" />
+</children></AnchorPane>
+      </content>
+    </Tab>
     <Tab text="Основное меню">
       <content>
         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
@@ -51,18 +63,6 @@
 </TableView>
 </children></HBox>
 </children></VBox>
-</children></AnchorPane>
-      </content>
-    </Tab>
-    <Tab text="Настройки">
-      <content>
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-<children><ListView fx:id="lv_listOfRoom" editable="true" layoutX="14.0" layoutY="14.0" prefHeight="410.0" prefWidth="200.0" AnchorPane.bottomAnchor="49.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="38.0" /><Button fx:id="btn_addTypeRoom" layoutX="14.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#addNewRoomType" prefHeight="22.0" prefWidth="80.0" text="Добавить" AnchorPane.bottomAnchor="17.0" AnchorPane.leftAnchor="14.0" /><Button fx:id="btn_deleteTypeRoom" layoutX="130.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#deleteCurrentRoomType" prefHeight="22.0" prefWidth="80.0" text="Удалить" AnchorPane.bottomAnchor="17.0" AnchorPane.leftAnchor="130.0" /><Label layoutX="14.0" layoutY="14.0" prefHeight="17.0" prefWidth="127.0" text="Типы комнат" /><TableView fx:id="tv_allSensorTable" editable="true" layoutX="223.0" layoutY="38.0" prefHeight="410.0" prefWidth="463.0" AnchorPane.bottomAnchor="49.0" AnchorPane.leftAnchor="223.0" AnchorPane.rightAnchor="18.0" AnchorPane.topAnchor="38.0" xmlns:fx="http://javafx.com/fxml">
-  <columns>
-    <TableColumn fx:id="col_idSendor" prefWidth="75.0" text="id датчика" />
-    <TableColumn fx:id="col_sensorDescription" onEditCancel="#editDescriptionSensor" prefWidth="75.0" text="расшифровка" /><TableColumn fx:id="col_roomType" prefWidth="75.0" text="тип комнаты" />
-  </columns>
-</TableView><Button fx:id="btn_setRoomType" layoutX="223.1875" layoutY="458.0" mnemonicParsing="false" prefWidth="80.0" text="Задать тип" AnchorPane.bottomAnchor="13.0" AnchorPane.rightAnchor="18.0" />
 </children></AnchorPane>
       </content>
     </Tab>
