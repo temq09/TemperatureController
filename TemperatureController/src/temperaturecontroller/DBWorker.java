@@ -102,6 +102,12 @@ public class DBWorker {
         updateQuery("delete from type_room where type_room.room_type = '" + roomType + "'");
     }
     
+    public void updateRoomType(String idRoomType, String idSensor) throws SQLException {
+        updateQuery("update sensor_descriptions " 
+                + "set type_of_room_id = " + idRoomType 
+                + " where sensor_descriptions.id = " + idSensor);
+    }
+    
     public boolean updateSensorDescription(String sensorId, String newDescription) 
             throws SQLException {
         boolean queryIsSuccess = false;

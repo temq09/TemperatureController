@@ -145,6 +145,16 @@ public class GlobalController {
         }
     }
     
+    public void updateRoomType(String idRoomType, String idSensor) {
+        try {
+            dBWorker.updateRoomType(idRoomType, idSensor);
+        } catch (SQLException ex) {
+            System.out.println("Error updating type");
+            chechDataBaseState();
+        }
+        
+    }
+    
     private void chechDataBaseState() {
         try {
             if(!dBWorker.getConnectionState()) {

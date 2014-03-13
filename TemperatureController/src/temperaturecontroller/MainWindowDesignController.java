@@ -278,7 +278,7 @@ public class MainWindowDesignController implements Initializable {
             List<String> obj = it.next();
             System.out.println(obj.get(0) + " " + obj.get(1));
             /* добавляем в карту значения ид и типа комнаты */
-            _roomList.put(obj.get(0), obj.get(1));
+            _roomList.put(obj.get(1), obj.get(0));
             /* добавляем в лист для отображения на форме типов комнат */
             _roomType.add(obj.get(1));
         }
@@ -454,9 +454,9 @@ public class MainWindowDesignController implements Initializable {
         
         VBox roomTypeLayout = new VBox();
         Label lb_roomType = new Label("Тип комнаты");
-        ComboBox<String> cb_roomTypeBox = new ComboBox<>();
+        final ComboBox<String> cb_roomTypeBox = new ComboBox<>();
         cb_roomTypeBox.setItems(_roomType);
-        
+        cb_roomTypeBox.setValue(oldRoomType);
         roomTypeLayout.getChildren().addAll(lb_roomType, cb_roomTypeBox);
         roomTypeLayout.setSpacing(5);
         
@@ -466,6 +466,23 @@ public class MainWindowDesignController implements Initializable {
         
         HBox okCanselLayout = new HBox();
         Button btn_Ok = new Button("Готово");
+        btn_Ok.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent t) {
+                String newRoomType = cb_roomTypeBox.getValue();
+                System.out.println(newRoomType);
+                String idRoomType = _roomList.get(newRoomType);
+                String idSensor = tv_allSensorTable.getSelectionModel().getSelectedItem().getId();
+                if(!idRoomType.isEmpty() && !idSensor.isEmpty()) {
+                    System.out.println(idRoomType);
+                    _globalController.updateRoomType(idRoomType, idSensor);
+                    loadSensrorDescriptions();
+                }
+                    
+                dialog.close();
+            }
+        });
         Button btn_cansel = new Button("Отмена");
         btn_cansel.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -485,6 +502,7 @@ public class MainWindowDesignController implements Initializable {
         
         Scene scene = new Scene(mainLayout);
         dialog.setScene(scene);
+        dialog.setResizable(false);
         dialog.show();
     }
     
