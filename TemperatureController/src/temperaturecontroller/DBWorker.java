@@ -1,7 +1,6 @@
 package temperaturecontroller;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,20 +17,20 @@ import java.util.logging.Logger;
 public class DBWorker {
     
     public static final String DRIVER_NAME = "com.mysql.jdbc.Driver";
-    public static final String SERVER_NAME = "localhost";
-    public static final String DB_NAME = "smart_house";
+    //public static final String SERVER_NAME = "localhost";
+    //public static final String DB_NAME = "smart_house";
     
-    private String _userName;
-    private String _password;
-    private String _connectiString;
+    private final String _userName;
+    private final String _password;
+    private final String _connectiString;
     private Connection _connection;
     
-    private DBWorker(){};
+    //private DBWorker(){};
     
-    public DBWorker(String userName, String password) {
+    public DBWorker(String userName, String password, String serverName, String dataBaseName) {
         _userName = userName;
         _password = password;
-        _connectiString = "jdbc:mysql://" + SERVER_NAME + "/" + DB_NAME;
+        _connectiString = "jdbc:mysql://" + serverName + "/" + dataBaseName;
     }
     
     public void openConnection() throws SQLException {

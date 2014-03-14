@@ -10,15 +10,46 @@ import java.util.logging.Logger;
 
 public class GlobalController {
     private static final GlobalController INSTANCE = new GlobalController();
+    private final String FILE_NAME = "configFile.xml";
+    private final String LOGIN = "login";
+    private final String PASSWORD = "password";
+    private final String SERVER_NAME = "server_name";
+    private final String DATABASE_NAME = "database_name";
+    private final String ROOT_ELEMENT = "database";
+    
     private DBWorker dBWorker = null;
     private SensorWorker sensorWorker = null;
     private boolean conectToDb = false;
     private boolean connectToAdapter = false;
+    private String _loginName = new String();
+    private String _password = new String();
+    private String _serverName = new String();
+    private String _databaseName = new String();
     
-    private GlobalController() { }
+    private GlobalController() {
+        readSetting();
+    }
     
     public static GlobalController getInstance() {
         return INSTANCE;
+    }
+    
+    private void readSetting() {
+        ReaderConfigurationFile readerConfigurationFile = null;
+        try {
+            readerConfigurationFile = new ReaderConfigurationFile(FILE_NAME);
+            readerConfigurationFile.setNodeList(ROOT_ELEMENT);
+        } catch (ReadConfigurationException ex) {
+            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex.getMessage());
+        }
+        if(readerConfigurationFile != null) {
+            _loginName = readerConfigurationFile.getNodeAttribute(LOGIN);
+            _password = readerConfigurationFile.getNodeAttribute(PASSWORD);
+            _databaseName = readerConfigurationFile.getNodeAttribute(DATABASE_NAME);
+            _serverName = readerConfigurationFile.getNodeAttribute(SERVER_NAME);
+            dBWorker = new DBWorker(_loginName, _password, _serverName, _databaseName);
+        }
     }
     
     /**
@@ -26,8 +57,7 @@ public class GlobalController {
      * @param password - password
      * @return - returns the state of the connection
      */
-    public boolean connectToDataBase(String userName, String password) {
-        dBWorker = new DBWorker(userName, password);
+    public boolean connectToDataBase() {
         try {
             dBWorker.openConnection();
             conectToDb = true;

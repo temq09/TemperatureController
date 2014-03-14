@@ -238,7 +238,7 @@ public class MainWindowDesignController implements Initializable {
         Thread thread_ConnectToDataBase = new Thread ( new Runnable() {
             @Override
             public void run() {  
-                while (!_globalController.connectToDataBase("root", "7581557") && isWork) {
+                while (!_globalController.connectToDataBase() && isWork) {
                     
                     try {
                         Thread.sleep(1000);
