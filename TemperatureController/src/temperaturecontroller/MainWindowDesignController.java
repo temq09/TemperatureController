@@ -279,9 +279,7 @@ public class MainWindowDesignController implements Initializable {
         lv_listOfRoom.setItems(_roomType);
         List<List<String>> tmpRoomList = new ArrayList<>();
         tmpRoomList = _globalController.getListRoom();
-        for(Iterator<List<String>> it = tmpRoomList.iterator(); it.hasNext(); )
-        {
-            List<String> obj = it.next();
+        for (List<String> obj : tmpRoomList) {
             System.out.println(obj.get(0) + " " + obj.get(1));
             /* добавляем в карту значения ид и типа комнаты */
             _roomList.put(obj.get(1), obj.get(0));

@@ -23,7 +23,7 @@ import org.xml.sax.SAXException;
  */
 public class ReaderConfigurationFile {
     
-    private NodeList _nodeList = null;
+    private NodeList _nodeList;
     private Document _document;
     
     public ReaderConfigurationFile(String pathToFile) throws ReadConfigurationException{
@@ -51,7 +51,7 @@ public class ReaderConfigurationFile {
             Node node = _nodeList.item(0);
             if(node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element)node;
-                returnValue = element.getElementsByTagName(tag).toString();
+                returnValue = element.getElementsByTagName(tag).item(0).getTextContent();
             }
         }       
         return returnValue;
