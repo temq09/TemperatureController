@@ -26,7 +26,13 @@ public class DBWorker {
     private Connection _connection;
     
     //private DBWorker(){};
-    
+    /**
+     * 
+     * @param userName - login for DataBase
+     * @param password - password for DataBase
+     * @param serverName - server name for DataBase (localhost or other address)
+     * @param dataBaseName - data base name 
+     */
     public DBWorker(String userName, String password, String serverName, String dataBaseName) {
         _userName = userName;
         _password = password;
@@ -38,10 +44,19 @@ public class DBWorker {
         System.out.println("Connect to data base is success");
     }
     
+    /**
+     * Return the list of all types room.
+     * @return - list of all types room
+     */
     public List<List<String>> getTypeRoomList() {
         return queryHandler("Select * from type_room");
     }
     
+    /**
+     * Return list of all sensor for all time.
+     * @return - list of all sensors which was detected for all time.
+     *           This list include id, name sensor(id sensor), description and type room
+     */
     public List<List<String>> getAllSensorList() {
         return queryHandler("select sensor_descriptions.id, id_sensor, description, room_type" +
                              " from sensor_descriptions" + 
@@ -49,6 +64,11 @@ public class DBWorker {
                              " ON sensor_descriptions.type_of_room_id = type_room.id");
     }
     
+    /**
+     * Executes the query and return result.
+     * @param query - query for database
+     * @return - query result
+     */
     public List<List<String>> queryHandler(String query) {     
         List<List<String>> resultList = new ArrayList<>();
         //Statement statement;
@@ -77,11 +97,21 @@ public class DBWorker {
         return resultList;        
     }
     
+    /**
+     * 
+     * @param idSensor - Name(id sensor) of the new sensor.
+     * @throws SQLException 
+     */
     public void insertNewSensor(String idSensor) 
             throws SQLException {
         updateQuery("insert into sensor_descriptions values (null , '"+ idSensor + "', 'Unknown sensor', null)");
     }
     
+    /**
+     * Insert the new temperature values to the database.
+     * @param newValues - new values of temperature <id sensor, temperature>
+     * @throws SQLException 
+     */
     public void insertTemperatureValues(Map<String, String> newValues) 
             throws SQLException {
         for(Entry<String, String> entry : newValues.entrySet()) {
@@ -91,22 +121,45 @@ public class DBWorker {
         }
     }
     
+    /**
+     * Insert the new room type to the database.
+     * @param roomType - name of new room type
+     * @throws SQLException 
+     */
     public void insertNewRoomeType(String roomType) 
             throws SQLException {
         updateQuery("insert into type_room values (null, '" + roomType + "')");
     }
     
+    /**
+     * Delete the room type
+     * @param roomType - name of room type which need delete
+     * @throws SQLException 
+     */
     public void deleteRoomeType(String roomType) 
             throws SQLException {
         updateQuery("delete from type_room where type_room.room_type = '" + roomType + "'");
     }
     
+    /**
+     * Update the room type at the sensor.
+     * @param idRoomType - id room type
+     * @param idSensor - id sensor
+     * @throws SQLException 
+     */
     public void updateRoomType(String idRoomType, String idSensor) throws SQLException {
         updateQuery("update sensor_descriptions " 
                 + "set type_of_room_id = " + idRoomType 
                 + " where sensor_descriptions.id = " + idSensor);
     }
     
+    /**
+     * 
+     * @param sensorId - Update the description of the sensor.
+     * @param newDescription - new sensor description
+     * @return - return true if query is successeful
+     * @throws SQLException 
+     */
     public boolean updateSensorDescription(String sensorId, String newDescription) 
             throws SQLException {
         boolean queryIsSuccess = false;
@@ -116,6 +169,11 @@ public class DBWorker {
         return queryIsSuccess;
     }
     
+    /**
+     * Delete sensor. Together whith the sensor will be deleted temperature values for this sensor.
+     * @param idSensor - id sensor which need delete. 
+     * @throws SQLException 
+     */
     public void deleteSensorFromDB(String idSensor) throws SQLException {
         _connection.setAutoCommit(false);
         try {
@@ -135,6 +193,12 @@ public class DBWorker {
         }
     }
     
+    /**
+     * Executes the query
+     * @param query - query to the database.
+     * @return - return true if query is successeful
+     * @throws SQLException 
+     */
     private boolean updateQuery(String query) throws SQLException {
         boolean queryIsSuccess = false;
         try(PreparedStatement state = _connection.prepareStatement(query))
@@ -153,6 +217,11 @@ public class DBWorker {
         return queryIsSuccess;
     }
     
+    /**
+     * Check the connection state
+     * @return - true if connection is open.
+     * @throws SQLException 
+     */
     public boolean getConnectionState() throws SQLException {
         if(_connection != null)
             return _connection.isValid(50);
