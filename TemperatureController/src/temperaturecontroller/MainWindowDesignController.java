@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -152,6 +153,9 @@ public class MainWindowDesignController implements Initializable {
         
         _globalController = GlobalController.getInstance();
         
+        initializeDescriptionList();
+        lv_listOfRoom.setItems(_roomType);
+        
         this.connectToDataBase();
         this.initizlizeOneWireAdapter();
 
@@ -177,7 +181,7 @@ public class MainWindowDesignController implements Initializable {
     }
     
     private void connectToDataBase() {
-        Thread thread_ConnectToDataBase = new Thread ( new Runnable() {
+        Platform.runLater(new Runnable() {
             @Override
             public void run() {  
                 while (!_globalController.connectToDataBase("root", "7581557") && isWork) {
@@ -189,11 +193,9 @@ public class MainWindowDesignController implements Initializable {
                 }
                 
                 loadRoomList();
-                initializeDescriptionList();
                 loadSensrorDescriptions();
             }
-        } , "Connect to data base thread");
-        thread_ConnectToDataBase.start();
+        });
     }
     
     private void initizlizeOneWireAdapter() {
@@ -216,20 +218,11 @@ public class MainWindowDesignController implements Initializable {
     
     private void loadRoomList() {
         System.out.println("Загружаем список комнат");
-        lv_listOfRoom.setItems(_roomType);
         _roomType.removeAll(_roomType);
         _roomList.clear();
         List<List<String>> tmpRoomList = new ArrayList<>();
         tmpRoomList = _globalController.getListRoom();
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        for(Iterator it = tmpRoomList.iterator(); it.hasNext(); )
-        {
-            List<String> obj = (List<String>)it.next();
+        for (List<String> obj : tmpRoomList) {
             System.out.println(obj.get(0) + " " + obj.get(1));
             /* добавляем в карту значения ид и типа комнаты */
             _roomList.put(obj.get(0), obj.get(1));
@@ -316,7 +309,7 @@ public class MainWindowDesignController implements Initializable {
                  * то отсутствует соединение с бд, поэтому надо переподключится
                  */
                 if(!_globalController.getConnectDbState()) {
-                    
+                    connectToDataBase();
                 }
             }
         }
