@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,14 +29,24 @@ public class GlobalController {
      */
     public boolean connectToDataBase(String userName, String password) {
         dBWorker = new DBWorker(userName, password);
-        try {
-            dBWorker.openConnection();
-            conectToDb = true;
-        } catch (SQLException ex) {
-            Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Error when connecting to the database");
-            conectToDb = false;
+        while(!conectToDb) {
+            try {
+                dBWorker.openConnection();
+                conectToDb = true;
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Error when connecting to the database");
+                System.out.println("Repeated attempts to connect will be made through 5 seconds");
+                conectToDb = false;
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException ex1) {
+                    Logger.getLogger(GlobalController.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
         }
+        
         return conectToDb;
     }
     
