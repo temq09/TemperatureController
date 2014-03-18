@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -210,6 +211,9 @@ public class MainWindowDesignController implements Initializable {
         
         _globalController = GlobalController.getInstance();
         
+        initializeDescriptionList();
+        lv_listOfRoom.setItems(_roomType);
+        
         this.connectToDataBase();
         this.initizlizeOneWireAdapter();
         
@@ -235,7 +239,7 @@ public class MainWindowDesignController implements Initializable {
     }
     
     private void connectToDataBase() {
-        Thread thread_ConnectToDataBase = new Thread ( new Runnable() {
+        Platform.runLater(new Runnable() {
             @Override
             public void run() {  
                 while (!_globalController.connectToDataBase() && isWork) {
@@ -248,11 +252,9 @@ public class MainWindowDesignController implements Initializable {
                 }
                 
                 loadRoomList();
-                initializeDescriptionList();
                 loadSensrorDescriptions();
             }
-        } , "Connect to data base thread");
-        thread_ConnectToDataBase.start();
+        });
     }
     
     private void initizlizeOneWireAdapter() {
@@ -276,7 +278,8 @@ public class MainWindowDesignController implements Initializable {
     
     private void loadRoomList() {
         System.out.println("Загружаем список комнат");
-        lv_listOfRoom.setItems(_roomType);
+        _roomType.removeAll(_roomType);
+        _roomList.clear();
         List<List<String>> tmpRoomList = new ArrayList<>();
         tmpRoomList = _globalController.getListRoom();
         for (List<String> obj : tmpRoomList) {
@@ -292,7 +295,7 @@ public class MainWindowDesignController implements Initializable {
      * за все время работы пограммы. Перед этим объекты содержащие информацию 
      * о сенсорах обнуляются
      */
-    private void loadSensrorDescriptions() {
+    private void  loadSensrorDescriptions() {
         System.out.println("Загружаем список датчиков");
         _sensorDescriptionList.removeAll(_sensorDescriptionList);
         List<List<String>> _allSensorList = _globalController.getAllSensorList();
@@ -307,8 +310,6 @@ public class MainWindowDesignController implements Initializable {
             _sensorForAllTime.put(d.get(1).toString(), d.get(2).toString());
             _idSensorFromDB.put(d.get(1), d.get(0));
         }
-        
-        //tv_allSensorTable.setItems(_sensorDescriptionList);
     }
     
     private Map<String, String> getAndShowCurrentTemperature() {
@@ -362,7 +363,15 @@ public class MainWindowDesignController implements Initializable {
     
     private void insertDataIntoDB(Map<String, String> newValues) {
         if(!newValues.isEmpty()) {
-            _globalController.insertNewTemperatureValue(newValues);
+            /* если операция добавления возвращает false значит что-то пошле не так */
+            if (!_globalController.insertNewTemperatureValue(newValues)) {
+                /* если проверка соединения с дб возвращает false, 
+                 * то отсутствует соединение с бд, поэтому надо переподключится
+                 */
+                if(!_globalController.getConnectDbState()) {
+                    connectToDataBase();
+                }
+            }
         }
     }
     
