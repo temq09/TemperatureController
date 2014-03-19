@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -88,6 +89,8 @@ public class MainWindowDesignController implements Initializable {
     private ObservableList<DataModel> _currentTemperatureList;
     private ObservableList<String> _roomType;
     
+    private boolean _connectionStateToDB = false;
+    
     @FXML
     private ListView<String> lv_listOfRoom;
     @FXML
@@ -131,7 +134,6 @@ public class MainWindowDesignController implements Initializable {
         // TODO
         
         _roomList = new HashMap<>();
-        //_allSensorList = new ArrayList<>();
         _sensorForAllTime = new HashMap<>();
         _idSensorFromDB = new HashMap<>();
         
@@ -140,7 +142,6 @@ public class MainWindowDesignController implements Initializable {
             
             @Override
             public void handle(TableColumn.CellEditEvent<DataModel, String> t) {
-                //t.getTableView().getItems().get(t.getTablePosition().getRow()).setDescription(t.getNewValue());
                 String sensorId = t.getTableView().getItems().get(t.getTablePosition().getRow()).getIdSensor().toString();
                 String oldDescription = t.getTableView().getItems().get(t.getTablePosition().getRow()).getDescriptions();
                 String oldValue = t.getOldValue();
@@ -225,8 +226,10 @@ public class MainWindowDesignController implements Initializable {
                 {
                     temperatureValue.clear();
                     temperatureValue = getAndShowCurrentTemperature();
-                    if(temperatureValue!=null && !temperatureValue.isEmpty())
-                        insertDataIntoDB(temperatureValue);
+                    if(_connectionStateToDB) {
+                        if(temperatureValue!=null && !temperatureValue.isEmpty())
+                            insertDataIntoDB(temperatureValue);
+                    }
                     try {
                         Thread.sleep(_updateTime);
                     } catch (InterruptedException ex) {
@@ -235,22 +238,39 @@ public class MainWindowDesignController implements Initializable {
                 }
             }
         }, "work thread");
+        
         thread_workThread.start();
     }
     
     private void connectToDataBase() {
-        Platform.runLater(new Runnable() {
+        Thread connectionThread = new Thread(new Runnable() {
             @Override
-            public void run() {  
-                while (!_globalController.connectToDataBase() && isWork) {
-                    
+            public void run() {
+                while (true) {
+                    if(!_connectionStateToDB) {
+                        _globalController.connectToDataBase();
+                        _connectionStateToDB = true;
+                        /*loadRoomList();
+                        loadSensrorDescriptions();*/
+                        initializeLists();
+                    }
                     try {
-                        Thread.sleep(1000);
+                        TimeUnit.SECONDS.sleep(5);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MainWindowDesignController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                
+            }
+        }, "connect to db thread");
+        connectionThread.setDaemon(true);
+        connectionThread.start();
+    }
+    
+    private void initializeLists() {
+        Platform.runLater(new Runnable() {
+
+            @Override
+            public void run() {
                 loadRoomList();
                 loadSensrorDescriptions();
             }
@@ -280,8 +300,8 @@ public class MainWindowDesignController implements Initializable {
         System.out.println("Загружаем список комнат");
         _roomType.removeAll(_roomType);
         _roomList.clear();
-        List<List<String>> tmpRoomList = new ArrayList<>();
-        tmpRoomList = _globalController.getListRoom();
+        List<List<String>> tmpRoomList = _globalController.getListRoom();
+        //tmpRoomList = _globalController.getListRoom();
         for (List<String> obj : tmpRoomList) {
             System.out.println(obj.get(0) + " " + obj.get(1));
             /* добавляем в карту значения ид и типа комнаты */
@@ -369,14 +389,13 @@ public class MainWindowDesignController implements Initializable {
                  * то отсутствует соединение с бд, поэтому надо переподключится
                  */
                 if(!_globalController.getConnectDbState()) {
-                    connectToDataBase();
+                    _connectionStateToDB = false;
                 }
             }
         }
     }
     
     private void initializeTemperatureList() {
-        //_currentTemperatureList = FXCollections.observableArrayList();
         col_IdInMainMenu.setCellValueFactory(
                 new PropertyValueFactory<DataModel, String>(ID_SENSOR));
         table_description.setCellValueFactory(
