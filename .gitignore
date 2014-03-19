@@ -48,4 +48,5 @@ TemperatureController/[Nn]bproject/*
 TemperatureController/[Tt]est/*
 
 *.xml
+!configFile.xml
 *.mf

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!--Файл настройки программы -->
+<application_setting>
+    <database>
+	<login>root</login>
+	<password>7581557</password>
+	<server_name>localhost</server_name>
+	<database_name>smart_house</database_name>
+    </database>
+</application_setting>
