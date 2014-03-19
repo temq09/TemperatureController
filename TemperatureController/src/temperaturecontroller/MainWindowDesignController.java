@@ -192,8 +192,9 @@ public class MainWindowDesignController implements Initializable {
                     if(!_connectionStateToDB) {
                         _globalController.connectToDataBase("root", "7581557");
                         _connectionStateToDB = true;
-                        loadRoomList();
-                        loadSensrorDescriptions();
+                        /*loadRoomList();
+                        loadSensrorDescriptions();*/
+                        initializeLists();
                     }
                     try {
                         TimeUnit.SECONDS.sleep(5);
@@ -205,6 +206,17 @@ public class MainWindowDesignController implements Initializable {
         }, "connect to db thread");
         connectionThread.setDaemon(true);
         connectionThread.start();
+    }
+    
+    private void initializeLists() {
+        Platform.runLater(new Runnable() {
+
+            @Override
+            public void run() {
+                loadRoomList();
+                loadSensrorDescriptions();
+            }
+        });
     }
     
     private void initizlizeOneWireAdapter() {
